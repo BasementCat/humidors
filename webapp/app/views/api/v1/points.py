@@ -64,7 +64,11 @@ class PointsParser(object):
     def parse_sensor_line(self, keyword, *args):
         if keyword in ('HUMIDITY', 'TEMPERATURE'):
             self.require_args(1, args)
-            self.points[-1][-1][keyword.lower()] = self.parse_float(args[0])
+            if keyword == 'TEMPERATURE':
+                self.points[-1][-1]['temperature_c'] = self.parse_float(args[0])
+                self.points[-1][-1]['temperature_f'] = (self.parse_float(args[0]) * 1.8) + 32
+            else:
+                self.points[-1][-1][keyword.lower()] = self.parse_float(args[0])
             return 'sensor', False
         elif keyword == 'SENSOR':
             return 'point', True
