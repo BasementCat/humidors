@@ -48,7 +48,7 @@ class PointsParser(object):
             return 'root', False
         elif keyword == 'POINT':
             self.require_args(0, args)
-            self.points.append({})
+            self.points.append([])
             return 'point', False
         else:
             raise ValueError("Invalid root keyword")
@@ -56,7 +56,7 @@ class PointsParser(object):
     def parse_point_line(self, keyword, *args):
         if keyword == 'SENSOR':
             self.require_args(1, args)
-            self.points[-1]['sensor'] = args[0]
+            self.points[-1].append({'sensor': args[0]})
             return 'sensor', False
         else:
             raise ValueError("Invalid point keyword")
@@ -64,7 +64,7 @@ class PointsParser(object):
     def parse_sensor_line(self, keyword, *args):
         if keyword in ('HUMIDITY', 'TEMPERATURE'):
             self.require_args(1, args)
-            self.points[-1][keyword.lower()] = self.parse_float(args[0])
+            self.points[-1][-1][keyword.lower()] = self.parse_float(args[0])
             return 'sensor', False
         elif keyword == 'SENSOR':
             return 'point', True
@@ -103,6 +103,8 @@ class PointsView(APIView_v1):
 
         now = time.time()
         res = PointsParser(request.data)
-        print res.interval
-        print res.points
+        for point in reversed(res.points):
+            for sensor in point:
+                sensor['timestamp'] = now
+            now += (res.interval / 1000.0)
         return "OK"
