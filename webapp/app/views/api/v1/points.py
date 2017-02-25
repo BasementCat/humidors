@@ -4,6 +4,10 @@ from flask import request, abort
 
 from app.views.api.v1 import APIView_v1
 
+# TODO: make this configurable
+from app import backends
+from app.backends.influxdb import InfluxDBBackend
+
 
 class PointsParser(object):
     def __init__(self, data):
@@ -111,4 +115,10 @@ class PointsView(APIView_v1):
             for sensor in point:
                 sensor['timestamp'] = now
             now += (res.interval / 1000.0)
+
+        try:
+            InfluxDBBackend().write_points(res.points)
+        except backends.BackendError as e:
+            return str(e), 500
+
         return "OK"
