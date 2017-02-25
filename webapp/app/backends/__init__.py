@@ -46,3 +46,7 @@ class BackendError(Exception):
 
 class InvalidConfigurationError(BackendError):
     pass
+
+
+class CommunicationError(BackendError):
+    pass

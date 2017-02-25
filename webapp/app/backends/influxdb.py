@@ -1,7 +1,11 @@
 from __future__ import absolute_import
+from datetime import datetime
 
 from flask import current_app
 from influxdb import InfluxDBClient
+from influxdb.exceptions import InfluxDBClientError
+
+from requests import ConnectionError, HTTPError
 
 from app import backends
 
@@ -28,7 +32,7 @@ class InfluxDBBackend(backends.Backend):
                     'tags': {
                         'sensor': sensor['sensor'],
                     },
-                    'time': sensor['timestamp'],
+                    'time': datetime.utcfromtimestamp(sensor['timestamp']).isoformat(),
                     'fields': {
                         'temperature_c': sensor['temperature_c'],
                         'temperature_f': sensor['temperature_f'],
@@ -36,4 +40,11 @@ class InfluxDBBackend(backends.Backend):
                     },
                 })
 
-        self.client.write_points(influxdb_points)
+        try:
+            self.client.write_points(influxdb_points)
+        except ConnectionError as e:
+            raise backends.CommunicationError("Can't connect: " + str(e))
+        except HTTPError as e:
+            raise backends.CommunicationError("Operation failed: " + str(e))
+        except InfluxDBClientError as e:
+            raise backends.CommunicationError("Write failed: " + str(e))

@@ -1,8 +1,23 @@
+import json
+import os.path
+
 from flask import Flask
+
+
+def load_config():
+    candidate_filenames = ('./humidors-config.json', '~/humidors-config.json', '/etc/humidors-config.json')
+    for filename in candidate_filenames:
+        filename = os.path.expanduser(filename)
+        if os.path.exists(filename):
+            with open(filename, 'r') as fp:
+                return json.load(fp)
+
+    raise RuntimeError("Can't load a config file in " + ' '.join(candidate_filenames))
 
 
 def get_app():
     app = Flask(__name__)
+    app.config.update(load_config())
 
     api_prefix = '/api'
 
